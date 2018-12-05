@@ -1,0 +1,23 @@
+#第五章
+
+(define subst*
+	(lambda (new old l)
+		(cond
+			((null ? l) (quote()))
+			(else
+				(cond
+					((atom? (car l)) 
+						(cond
+							((eq? old (car l)) (cons new (subst* new old (cdr l) )))
+							(else (cons old (subst* new old (cdr l))))
+						)
+					)
+					(else (cons (subst* new old (car l)) (subst* new old (cdr l))))
+				)
+			)
+		)
+
+	)
+)
+
+
