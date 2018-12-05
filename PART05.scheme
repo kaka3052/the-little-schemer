@@ -37,3 +37,21 @@
         )
     )
 )
+
+
+// (member* a l)    p87
+// 在这里 a 是chips l为((potato)(chips((www) fish)(chips)))   
+// 结果：#t 
+(define member*
+    (lambda (a l)
+        (cond
+            ((null ? l) (quote()))
+            ((atom? (car l))
+                (or (eq? a (car l)) (member* a (cdr l)))
+            )
+            (else (or (member* a (car l)) (member* a (cdr l))))
+        )
+    )
+)
+
+
