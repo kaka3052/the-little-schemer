@@ -1,10 +1,78 @@
 /*
 第六章 如影随行
+看完第六章，很震撼，体会到了解释器的本质。即。符号到模型的全局约定。另一种说法是，表象到意义的大众共识。例如btc与价值的对等就是靠大众共识／约定。而大众的约定的载体是：文化、书籍、权威
 */
 
 
 //(numbered? aexp)
 //numbered?是什么？ 它是一个函数，用来判断一个算术表达式的表示方式中，是否除了+、*、^之外只包含数字。
 (define numbered?
-    
+    (lambda (aexp)
+        (cond 
+            //这里为什么要判断null? 用atom是否可以兼容判断null? 
+            //这里有理解错误，不能用null?来判断一个原子，null是判断容器里面是否有货的，即，主语是列表。
+            //而如果我们确定一个表达式有货为前提，那么只需要判断是否为一个原子即可，如果是原子，就只需要再判断是否为数字即可。所以这句话是(atom? aexp)(number? aexp)
+            ((null? aexp) #f)   
+
+            //这里为什么要写成atom? (car aexp)。能够被car的aexp还是原子吗？
+            //数学表达式是原子，里面的一个(car aexp)还是原子，这个逻辑合理吗？
+            //错误的假设：数学表达式是原子。
+            //正确的理解是数学表达式可以是原子，也可以是两个数字又运算符号连接。
+            ((atom? (car aexp)) (quota? (car (cdr aexp)) *))
+            ((atom? (car aexp)) (quota? (car (cdr aexp)) +))
+            ((atom? (car aexp)) (quota? (car (cdr aexp)) ^))
+            (else #f)
+        )
+    )    
 )
+//上面的coding是错误的，错误反思一下。
+//重新coding如下
+(define numbered?
+    (lambda (aexp)
+        (cond(
+            ((null? aexp) #t)
+            ((atom? aexp)(number? aexp))
+            //这里的错误假设是，没有认知明白car代表着什么，代表着第一个表达式，
+            //因为有可能是这样的算术表达式：((3+4)*5)
+            ((eq? (car (cdr aexp)) (quote +)) (numbered? (cdr (cdr aexp))))
+            ((eq? (car (cdr aexp)) (quote *)) (numbered? (cdr (cdr aexp))))
+            ((eq? (car (cdr aexp)) (quote ^)) (numbered? (cdr (cdr aexp))))
+            (else #f)
+        ))
+    )
+)
+
+//重新coding如下
+(define numbered?
+    (lambda (aexp)
+        (cond(
+            ((atom? aexp)(number? aexp))
+            //TODO 这里又不周全的地方，如果当前是个符合算术表达式，就不成立了。so，应该加上判断第一个car是否为原子
+            ((eq? (car (cdr aexp)) (quote +)) 
+                //如果第二个符号是+号，那么第一个和第二个都必须是数字
+                (and (number? (car aexp)) (number? (car (cdr (cdr aexp)))))
+            )
+            ((eq? (car (cdr aexp)) (quote *)) 
+                (and (number? (car aexp)) (number? (car (cdr (cdr aexp)))))
+            )
+            ((eq? (car (cdr aexp)) (quote ^))
+                (and (number? (car aexp)) (number? (car (cdr (cdr aexp)))))
+            )
+            (else 
+                #f
+            )
+        ))
+    )
+)
+//可以简化
+(define numbered?
+    (lambda (aexp)
+        (cond(
+            ((atom? aexp)(number? aexp))
+            (else (and (number? (car aexp)) (number? (car (cdr (cdr aexp))))))
+        ))
+    )
+)
+
+
+
