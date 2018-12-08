@@ -1,0 +1,186 @@
+/*
+第七章 朋友及关系
+
+
+*/
+
+//(set? lat)
+(define set?
+    (lambda (lat)
+        (cond 
+            ((null? lat) (quote ()))
+            ((member? (car lat) (cdr lat)) #f)
+            (else set(cdr lat)))))
+
+//(makeset lat)
+//用member?函数来写makeset函数
+(define makeset 
+    (lambda (lat)
+        (cond 
+            ((null? lat) (quote()))
+            ((member? (car lat) (cdr lat)) (makeset (cdr lat)))
+            (else (cons (car lat) (makeset (cdr lat)))))))
+
+//(subset ? set1 set2)
+(define subset?
+    (lambda (set1 set2)
+        (cond 
+            ((null? set1) #t)
+            (else 
+                (cond 
+                    ((member? (car set1) set2) (subset? (cdr set1) set2))
+                    (else #f))))))
+//重构简洁一点
+(define subset?
+    (lambda (set1 set2)
+        (cond 
+            ((null? set1) #t)
+            ((member? (car set1) set2) (subset? (cdr set1) set2))
+            (else #f))))
+//重构再简洁一点,尝试用and来改写subset?
+(define subset?
+    (lambda (set1 set2)
+        (cond 
+            ((null? set1) #t)
+            (else 
+                (and (member? (car set1) set2) 
+                    (subset? (cdr set1) set2))))))
+
+//(eqset? set1 set2)
+(define eqset?
+    (lambda (set1 set2)
+        (cond
+            ((and (null? set1) (null? set2)) #t)
+            (else (and (subset? (car set1) set2) (eqset? (cdr set1) set2))))))
+//重构 仅一行
+(define eqset?
+    (lambda (set1 set2)
+        (and (subset? set1 set2) (subset? set2 set1))))
+
+
+//(intersect? set1 set2)   判断set1和set2是否有交集
+(define intersect?
+    (lambda (set1 set2)
+        (cond 
+            ((null? set1) #f)
+            ((member? (car set1) set2) #t)
+            (else (intersect? (cdr set1) set2)))))
+//重构，用or
+(define intersect?
+    (lambda (set1 set2)
+        (cond 
+            ((null? set1) #f)
+            (or (member? (car set1) set2) (intersect? (cdr set1) set2)))))
+
+//(intersect set1 set2)
+(define intersect
+    (lambda (set1 set2)
+        (cond 
+            ((null? set1) (quote ()))
+            ((member? (car set1) set2) (cons (car set1) (intersect (cdr set1) set2)))
+            (else (intersect (cdr set1) set2)))))
+
+//(union set1 set2)
+(define union
+    (lambda (set1 set2)
+        (cond 
+            ((null? set1) set2)
+            ((memeber? (car set1) set2) (union (cdr set1) set2))
+            (else (cons (car set1) (union (cdr set1) set2))))))
+
+//(intersectall l-set)  用intersect来编写intersectall
+//假定set的列表非空
+(define intersectall
+    (lambda (l-set)
+        (cond
+            ((null? (cdr l-set)) (car l-set))  //这句话写的好!!!精髓
+            (else (intersect (car l-set) (intersectall(cdr l-set)))))))
+
+//(a-pair? x)   判断是非为一个仅有两个S-表达式的列表
+(define a-pair?
+    (lambda (x)
+        (cond
+            ((atom? x) #f)
+            ((null? x) #f)
+            ((null? (cdr x)) #f)
+            ((null? (cdr (cdr x))) #t)
+            (else #f))))
+
+//(fun? rel)  询问rel的每个表达式的第一个元素是否不重复
+(define fun?
+    (lambda (rel))
+        (set? (first rel)))
+
+//（revrel rel)  反转每个pair的元素位置
+(define revrel
+    (lambda (rel)(
+        (cond
+            ((null? rel)(quote()))
+            (else (cons (cons (cdr (car let)) (car (car let))) (revrel (cdr rel))))))))
+//重写，用build, first, second
+(define first
+    (lambda (p)
+        (car p)))
+
+(define second
+    (lambda (p)
+        (car (cdr p))))
+
+(define build
+    (lambda (s1 s2)
+        (cons s1 (cons s2 (quote())))))
+
+(define revrel
+    (lambda (rel)
+        (cond
+            ((null? rel)(quote()))
+            (else 
+                (cons
+                    (build (second (car rel)) (first (car rel))))))) 
+                    (revrel (cdr rel)))
+
+//用辅助函数revpair来重写revrel?
+//revpair是对调一个pair的两个部分
+(define revpair
+    (lambda (pair)
+        (buid (second pair) (first pair))))
+
+(define revrel
+    (lambda (rel)
+        (cond
+            ((null? rel)(quote()))
+            (else (cons (revpair (car rel)) (revrel (cdr rel)))))))
+
+(define  fullfun?
+    (lambda (fun)
+        (set? (seconds fun))))
+
+(define one-to-one
+    (lambda (fun)
+        (fun? (revrel fun))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
