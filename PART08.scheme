@@ -113,6 +113,36 @@
                 (value (1st-sub-exp nexp))
                 (value (2nd-sub-exp nexp)))))))
 
+//根据之前的multirember编写multirember-f函数
+(define multirember
+    (lambda (a lat)
+        (cond 
+            ((null? lat) (qutoe ()))
+            (( eq? a (car lat)) (multirember (car lat)))
+            (else (cons (car lat) (multirember (cdr lat)))))))
+//需要抽象出来的部分为判断第一个字母是否相等，如果相等则返回()如果不等则返回car lat
+
+(define multirember-f 
+    (lambda (a lat))
+        (cond 
+            ((null? lat) (quote ()))
+            (else cons (judgefirstchar a lat) (multirember (cdr lat)))))
+
+(define judgefirstchar
+    (lambda (a lat)
+        (cond 
+            ((eq? a (car lat)) (qutoe ()))
+            (else (car lat)))))
+
+
+//反思，书里说的不是要搞抽象差异代码，而是要搞currying,那么如下：
+(define multirember-f
+    (lambda (test?)
+        (lambda(a lat)
+            (cond
+                ((null? lat) (qutoe ()))
+                ((test? a (car lat)) ((mutirember-f test?) a (cdr lat)))
+                (else ((mutirember-f test?) a (cdr lat)))))))
 
 
 
