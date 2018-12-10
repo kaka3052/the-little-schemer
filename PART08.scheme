@@ -4,6 +4,132 @@
 
 */
 
+//(rember-f test? a l)   在l中查找到第一个a，将其剔除。
+(define rember-f
+    (lambda (test? a l)
+        (cond
+            ((null? l) (quote()))
+            //在Lisp中 test?写成 funcall test?, 用funcall test?表达的更到位，即，表示一个函数的运行
+            ((test? a (car l)) (cdr l))
+            (else (cons (car l) (rember-f test? a (cdr l )))))))
+
+//如何让函数返回函数? 如果参数为a时候，返回的函数是
+//(lambda (x)
+//    (eq? x a))
+//这就是传说的柯里化  Curry-ing
+(lambda (a)
+    (lambda (x)
+        (eq? x a)))
+
+//使用define...来给这个函数去一个名字
+
+(define eq?-c
+    (lambda(a)
+        (lambda(x)
+            (eq? x a))))
+
+/*
+(eq?-c k)表示什么？在这里k是salad
+
+表示一个函数:
+(lambda (x)
+    eq? x salad)
+
+我们来定义这个函数:
+(define eq?-salad 
+    (eq?-c k))    
+等于是：
+(define eq?-salad
+    (lambda (x)
+        eq? x salad))
+
+
+如果不用eq?-salad如何写？
+((eq?-c x) y)
+*/
+
+//重写rember-f使其只保留一个参数
+(define rember-f
+    (lambda (test?)
+        (lambda (a l))
+            (cond 
+                ((null? l) (quote()))
+                ((test? a (car l) ) (cdr l))
+                (else (cons (car l) ((rember-f test?) a (cdr l)))))))
+
+
+//对于insertL-f和insertR-f，如何合并成一个函数？
+//将差异提取出来, 封装成一个辅助函数。
+(define seqL
+    (lambda (new old l)
+        (cons new (cons old l))))   //new在old左边
+
+(define seqR
+    (lambda (new old l)
+        (cons old (cons new l))))   //new在old右边
+
+//定义一个函数的参数seq,可以是seqL也可以是seqR.这里有点接口的味道了。但是由于没有类型检查，所以容易出错。
+//即，不符合这俩种逻辑的函数也能传入进来。
+//所以，java或者go这种强类型的语言就是解决这个问题的。保证不是干这类事的别进来。
+(define insert-g
+    (lambda (seq)
+        (lambda (new old l)
+            (cond 
+                ((null? l) (quote()))
+                ((eq? (car l) old) 
+                    (seq new old (cdr l)))
+                (else ((insert-g seq) new old (cdr l))) ))))
+
+//现在用insert-g来定义insertL
+(define insertL
+    (insert-g seqL))
+//现在用insert-g来定义insertR
+(define insertR
+    (insert-g seqR))
+//重写，不用辅助函数,直接将定义传递进去
+(define insertL
+    (insert-g
+        (lambda (new old l)
+            (cons new (cons old l)))))
+
+
+//第九戒：用函数来抽象通用模式
+//将重复的代码中的差异部分，的差异值作为函数的返回值。差异逻辑作为辅助函数的算法。
+
+(define atom-to-function
+    (lambda (x)
+        (cond
+            ((eq? x (quote +)) ＋)
+            ((eq? x (quote *)) ＊)
+            (else ^))))
+
+(define value
+    (lambda (nexp)
+        (cond
+            ((atom? nexp) nexp)
+            (else
+                ((atom-to-function
+                    (operator nexp))
+                (value (1st-sub-exp nexp))
+                (value (2nd-sub-exp nexp)))))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
