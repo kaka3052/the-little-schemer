@@ -142,7 +142,88 @@
             (cond
                 ((null? lat) (qutoe ()))
                 ((test? a (car lat)) ((mutirember-f test?) a (cdr lat)))
-                (else ((mutirember-f test?) a (cdr lat)))))))
+                (else ((mutirember-f test?) a (cdr lat))))))) 
+
+
+//collector or continuation
+
+(define multirember&co
+    (lambda (a lat col)
+        (cond
+            ((null? lat)
+                (col (quote())(quote()))
+            ((eq? (car lat) a)
+                (multirember&co a
+                    (cdr lat)
+                    (lambda (newlat seen)
+                        (col newlat (cons (car lat) seen)))))
+            (else
+                (multirember&co a
+                    (cdr lat)
+                    (lambda (newlat seen)
+                        (col (cons (car lat) newlat) seen))))))))
+
+//最终的运行时 (col  list1  list2)
+//其中list1为所有等于a的原子. list2为所有不等于a的原子.
+//what？本质上是利用currying，将参数连成了一个数组。最后执行一次，即前期造势，最后爆发。
+
+//为了更深刻的理解continuation，写一个题目：用递归实现反向输出一个列表
+//这里有两种思路：
+//思路1.正常的递归方式，利用递归实现最后的表达式线性变化。
+//思路2:使用构建currying函数嵌套结构，将参数作为collector，最后执行一个currying表达式
+//WHAT?本质不同是,递归变性的方式，第一种是变形成线性表达式，第二种是变形称为curry表达式。
+//前者运行的时候是现行表达式，后者运行的时候是curry表达式。
+//curry表达式的本质是函数的嵌套，并且可以跨函数将参数变成collector
+
+//思路1:
+(define rever
+    (lambda (lat)
+        (cond 
+            ((null? lat) (print "BEGIN"))
+            (else
+                (rever (cdr lat)) (print (car lat))(print "END")))))
+
+逐步执行:
+1(调用）:  (rever (a b))
+2(变形):  (rever (b)) (print a) (print "END")
+3(变形):  ((rever ()) (print b)) (print a) (print "END")
+4(输出):  ((print "BEGIN") (print b))(print a)(print "END") ---运行--->  BEGIN b a END
+
+
+//思路2:
+(define rever
+    (lambda (lat col)
+        (cond 
+            ((null? lat) (col "BEGIN"))
+            (else
+                (rever (cdr lat) 
+                    (lambda (list)
+                        (col (cons list (car lat)))))))))
+(define col
+    (lambda (list)
+        (print  (cons list "END"))))
+
+
+逐步执行：
+1(调用):  (rever (a b) (lambda (list)
+                            (print list + "END")))
+
+2(变形):  (rever (b) (lambda (list)
+                        (lambda (list + a))
+                            (print list + a + "END"))))
+
+3(变形):  (rever ()  (lambda (list)
+                        (lambda (list + b))
+                            (lambda (list + b + a))
+                                (print list + b + a + "END")))
+
+4(执行输出):  (col "BEGIN")--> (lambda ("BEGIN")
+                                (lambda ("BEGIN" + b))
+                                    (lambda ("BEGIN" + b + a))
+                                        (print "BEGIN" + b + a + "END"))  
+    ----运行--输出--> BEGIN b a END
+
+
 
 
 
